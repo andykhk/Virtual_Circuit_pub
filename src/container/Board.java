@@ -5,26 +5,17 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.Vector;
 
-import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
-import javax.swing.event.MouseInputAdapter;
 
-import container.*;
 import data_Package.Red_rect;
 import data_Package.Selected_area;
 import menu.Menu;
@@ -70,10 +61,8 @@ public class Board extends JPanel {
 	//Iteration
 	public Vector<Coor> Q_of_cell;
 	public Vector<Coor> Next_Q ;
-	//I/O Load & Save feature
-	public Queue<cell_w_coor> Q_for_pack;
-	public boolean running;
 
+	
 	private int  total;
 	/*
 	 * Color prefix
@@ -81,15 +70,21 @@ public class Board extends JPanel {
 	private  Color border_colour = new Color(40,40,40), black = Color.black;
 	private int status = 0;
 	private Cell[][][] cells;
+	
+	//Flag for interation
+	public boolean running;
+	//Latest snapshot is on image (buffered)
 	public boolean buffering;
 	public boolean sync ;
+	//Force manager to render the screen 
 	public boolean force_rend;
 	
 	BufferedImage image ;
+	//Interface of image
 	Graphics buf_g;
 	
 	
-	//31/10 testing object for select function
+	
 	Red_rect shape;
 	public boolean selection_m;
 	private Point startPoint;
@@ -97,7 +92,7 @@ public class Board extends JPanel {
 	
 	//Copy & paste feature
 	private boolean copyed, selected, select_drag, pasted;
-	private Selected_area copyed_area, copyed_offset;
+	private Selected_area copyed_area;
 	
 	//Position of float layer
 	int copyed_x, copyed_y;
@@ -183,14 +178,13 @@ public class Board extends JPanel {
        * Complex computation
        */
       public void NextIteration () {
-    	  System.out.println("Size of Q: "+Q_of_cell.size() );
-  //  	  System.out.println("Next iteration.");
+    	  System.out.println("Next iteration. \nSize of Q: "+Q_of_cell.size() );
     	  
     	  Next_Q = new Vector<Coor>();
     	  Vector<Integer> Next_state = new Vector<Integer>();
+    	  int cur_d =Get_Depth();
     	  
     	  //Until the last one (Loop A)
-    //	  while (Q_of_cell.size() !=0) {
     	  for (int index=0 ; index<Q_of_cell.size() ; index++) {
     		  //pop it out
     		  Coor temp = Q_of_cell.get(index);
@@ -205,72 +199,63 @@ public class Board extends JPanel {
     			  //Get back the number of input row
     			  int row_c = cells[z][x][y].getInput_count();
 
-    			  //Compare the state with input row by row
+    			  /*Compare the state with input row by row
+    			   * Only do amount of rows to save resource
+    			   */
     			  for (int i=0 ; i<row_c ; i++) {
 
     				  //Add coor to queue if it match
     				  Out_Des t = cells[z][x][y].Check_row(i);
 
     				  if (t != null) {
-    					 	
+    					  /*Using multiple if, because it's possible to
+    					    have multiple output tot different direction
+    					   */
 
-    						  if ( ( (t.destin & (1 << 0)) != 0 ) && (cells[z][x][y-1] != null ) )  {
-    		//					  System.out.println("Row 0 match");
-    							  Next_Q.add(new Coor(z, x,y-1) );
-    							  Next_state.add(t.state);	  
-    						  }	  
-    			
-    						  if ( (t.destin & (1 << 1)) != 0  && (cells[z][x][y+1] != null ) ) {
-    	//						  System.out.println("Row 1 match");
-    							  Next_Q.add(new Coor(z, x,y+1) );
-    							  Next_state.add(t.state);
-    						  }
-    		
-    						  if ( (t.destin & (1 << 2)) != 0   && (cells[z][x+1][y] != null )) {
-    		//					  System.out.println("Row 2 match");
-    							  
-    							  Next_Q.add(new Coor(z, x+1, y) );
-    							  Next_state.add(t.state);
-    						  }
-    		
-    						  if ( (t.destin & (1 << 3)) != 0   && (cells[z][x-1][y] != null ) ) {
-    		//					  System.out.println("Row 3 match");
-    							  Next_Q.add(new Coor(z, x-1, y) );
-    							  Next_state.add(t.state);
-    						  }
-    		
-    						  if ( (t.destin & (1 << 4)) != 0  && (cells[z+1][x][y] != null )) {
-    		//					  System.out.println("Row 4 match");
-    							  Next_Q.add(new Coor(z+1, x, y) );
-    							  Next_state.add(t.state);
-    						  }
-    
-    						  if ( (t.destin & (1 << 5)) != 0  && (cells[z-1][x][y] != null )) {
-    			//				  System.out.println("Row 5 match");
-    							  Next_Q.add(new Coor(z-1, x,y) );
-    							  Next_state.add(t.state);
-    						  }
-   
-    						  if ( (t.destin & (1 << 6)) != 0 ) {
-    			//				  System.out.println("Row 6 match");
-    							  Next_Q.add(new Coor(z, x, y ) );
-    							  Next_state.add(t.state);
-    						  }
-	
-    				 
+    					  if ( ( (t.destin & (1 << 0)) != 0 ) && (cells[z][x][y-1] != null ) )  {
+    						  Next_Q.add(new Coor(z, x,y-1) );
+    						  Next_state.add(t.state);	  
+    					  }	  
+    					  if ( (t.destin & (1 << 1)) != 0  && (cells[z][x][y+1] != null ) ) {
+    						  Next_Q.add(new Coor(z, x,y+1) );
+    						  Next_state.add(t.state);
+    					  }
+    					  if ( (t.destin & (1 << 2)) != 0   && (cells[z][x+1][y] != null )) {
+    						  Next_Q.add(new Coor(z, x+1, y) );
+    						  Next_state.add(t.state);
+    					  }
+    					  if ( (t.destin & (1 << 3)) != 0   && (cells[z][x-1][y] != null ) ) {
+    						  Next_Q.add(new Coor(z, x-1, y) );
+    						  Next_state.add(t.state);
+    					  }
+    					  if ( (t.destin & (1 << 4)) != 0  && (cells[z+1][x][y] != null )) {
+    						  Next_Q.add(new Coor(z+1, x, y) );
+    						  Next_state.add(t.state);
+    					  }
+    					  if ( (t.destin & (1 << 5)) != 0  && (cells[z-1][x][y] != null )) {
+    						  Next_Q.add(new Coor(z-1, x,y) );
+    						  Next_state.add(t.state);
+    					  }
+    					  if ( (t.destin & (1 << 6)) != 0 ) {
+    						  Next_Q.add(new Coor(z, x, y ) );
+    						  Next_state.add(t.state);
+    					  }
     				  }
     			  }
-    			  
-    			 
+
+
     			  //Erase the state of current cell
 				  cells[z][x][y].empty_state();
 				  cells[z][x][y].set_bg_default();
 				  
-				  //Rendering
-				  buf_g.setColor(cells[z][x][y].default_bg);
-				  int pos_x = x - (cur_x - Amount_of_x/2) ;
-        		  int pos_y = y - (cur_y - Amount_of_y/2) ;
-        		  buf_g.fillRect(pos_x*total+border_width, pos_y*total+border_width, cell_width, cell_width);
+				  /*Rendering selected cell into default colour 
+				   *since it finished to process, only when it's 
+				   *visible
+				   */
+				  if(z ==  cur_d) {
+					  buf_g.setColor(cells[z][x][y].default_bg);
+					  buf_g.fillRect( (x-prefix_x()) *total+border_width, (y-prefix_y()) *total+border_width, cell_width, cell_width);
+				  }
   
     		  }
     	  }
@@ -279,9 +264,7 @@ public class Board extends JPanel {
     	   * After above computation, now we have a list of cell which
     	   * need to be process.
     	   */
-    	  
-   // 	  System.out.println("Next state size: " +  Next_state.size() );
-    	  System.out.println("Next Q size: " +  Next_Q.size() );
+       	  System.out.println("Next Q size: " +  Next_Q.size() );
     	  
     	  
     	  int len = Next_Q.size();
@@ -304,34 +287,30 @@ public class Board extends JPanel {
     			  cells[z][x][y].set_State(Next_state.get(i));
     			  cells[z][x][y].update_bg();
     			  
-    			  
-    			  if ( cells[z][x][y].Any_state() ) {
-    				  buf_g.setColor(left.sec_pan.get_color(cells[z][x][y].bg) );
-    			  } else {
-    				  buf_g.setColor(cells[z][x][y].default_bg);
+    			  //Only draw when it's on current dimension
+    			  if(z ==  cur_d) {  
+    				  if ( cells[z][x][y].Any_state() ) {
+    					  buf_g.setColor(left.sec_pan.get_color(cells[z][x][y].bg) );
+    				  } else {
+    					  buf_g.setColor(cells[z][x][y].default_bg);
+    				  }
+    				  buf_g.fillRect( (x-prefix_x())*total+border_width, (y-prefix_y())*total+border_width, cell_width, cell_width);
     			  }
-    			  
-    			  int pos_x = x - (cur_x - Amount_of_x/2) ;
-    			  int pos_y = y - (cur_y - Amount_of_y/2) ;
-    			  buf_g.fillRect(pos_x*total+border_width, pos_y*total+border_width, cell_width, cell_width);
-
     		  }
 
     	  }
 
-    	 
-    	  
     	  //Get prepare for next iteration
-    	  Q_of_cell.clear();
     //	  System.out.println("Q size: " +Q_of_cell.size());
-    	  Q_of_cell.addAll(Next_Q);
+    	  Q_of_cell.clear();
+    	  Q_of_cell = Next_Q;
     	  
     	 if (sync) { 
     		 System.out.println("Paint in sync");
     	  //Draw
     	  this.repaint();
     	  //Testing code
-    //	  this.paintImmediately(0, 0, Frame_w, Frame_h);
+    	  //this.paintImmediately(0, 0, Frame_w, Frame_h);
     	 }
     	 
       }
@@ -348,6 +327,7 @@ public class Board extends JPanel {
     		  //Save what ever is it on selected area
     		  copyed_area = new Selected_area(select_area);
     		  copyed_area.Take_copy(cells);
+    		  copyed_area.Snapshot(cell_width, border_width, cells, left);
     		  /*Reset selected_area to avoid delete selected_area 
     		   * accidentially when modifying other pr  on panel
     		   */
@@ -460,6 +440,8 @@ public class Board extends JPanel {
     						  }else { 
     							  //In scope, ready to drag around. (Save the ini value)
     							  select_drag = true;
+    							  //Take snapshot for cache
+    							  select_area.Snapshot(cell_width, border_width, cells, left);
     							  //Update cur mouse coor
     							  pre_x = cur_x;
         						  pre_y = cur_y;
@@ -480,9 +462,6 @@ public class Board extends JPanel {
     								  cur_y < pos_y || cur_y > pos_y + height ) {	  
     							  //Out bound, make change perm & reset flag
     							  System.out.println("Out bound - pasted");
-    					// 		  System.out.println("Paste to " + (pos_x - prefix_x() ) + "  " + (pos_y - prefix_y() ));
-    						//	  copyed_area.Copy(pos_x, pos_y, Get_Depth(), cells, Q_of_cell, false);
-  
     							  copyed_area.Paste(pos_x, pos_y, Get_Depth(), cells, Q_of_cell);
 
 
@@ -709,23 +688,7 @@ public class Board extends JPanel {
     		  System.out.println("Out of bound. Y");
     	  }
       }
-      
-      
-      private boolean check_bound () {
- 
-    	  int select_l_upper_x = select_area.Get_Index_x() - prefix_x();
-    	  int select_l_upper_y = select_area.Get_Index_y() - prefix_y();
-    	  
-    	  if(select_l_upper_x > (0-select_area.weight)  && select_l_upper_x < Amount_of_x  ) {
-    		 if(select_l_upper_y >  (0-select_area.height)  && select_l_upper_y < Amount_of_y  ) {
-    			 return true;  
-    		 }
-    	  }
-    	  
-    	  
-    	  return false;
-      }
-      
+     
 
       /* Graphic section, which responsible to draw the grid 
        */  
@@ -749,7 +712,7 @@ public class Board extends JPanel {
     			  }
 
     			  if (selected){
-    				  if (check_bound()){
+    				  if (select_area.Check_bound_visible(prefix_x(), prefix_y(), Get_Depth(), Amount_of_x, Amount_of_y) ){
     				  //It mean the selected area is on scope in white color
     					  draw_area(g,select_area, prefix_x(), prefix_y(), false, false, false, false );	    	 
     				  }
@@ -760,13 +723,27 @@ public class Board extends JPanel {
     				  //Black out current area
     				  draw_area(g, select_area,prefix_x(), prefix_y(), false, false, false, true );	
     				  //Draw on selected spot
-    				  draw_area(g, select_offset, prefix_x(), prefix_y(), false, false, false, false);  
-    				
+    				  //Only redraw cache when view point changed
+    				  if (!select_area.check_cache_eligible(cell_width, border_width)) {
+    					  System.out.println("take a new snapshot");
+    					  select_area.Snapshot(cell_width, border_width, cells, left);
+    				  }
+      				  //Cal pos
+    				  int rend_x = (select_offset.Get_Index_x() - prefix_x())* (total);
+    				  int rend_y = (select_offset.Get_Index_y() - prefix_y())* (total);
+    				  g.drawImage(select_area.image, rend_x, rend_y, null);  
+    	//			 System.out.println(select_offset.)	
     			  }
 
     			  //Only draw copyed area on top if pasted = true
-    			  if (pasted) {  
-    				  draw_copyed_area(g, copyed_area);
+    			  if (pasted) {
+    				  //Only redraw it when view point change
+    				  if (!copyed_area.check_cache_eligible(cell_width, border_width)) {
+    					  copyed_area.Snapshot(cell_width, border_width, cells, left);
+    				  }
+ 
+    			//	 System.out.println("Drawing on: "+ copyed_x + "  " + copyed_y);
+    				  g.drawImage(copyed_area.image, copyed_x*total, copyed_y*total, null);
     			  }
 
     		  }
@@ -788,8 +765,6 @@ public class Board extends JPanel {
     			  //turn buffering to true
     			  buffering = true;
     		  } 
-
-
     	  }
     	  
     	  
@@ -922,6 +897,8 @@ public class Board extends JPanel {
     	  }
       }
 
+     
+      /*
       private void draw_copyed_area  (Graphics g, Selected_area area) {
     	  
 		  int pre_x = copyed_x - area.Get_Index_x();
@@ -929,7 +906,7 @@ public class Board extends JPanel {
 
     	  g.setColor(Color.white);
     	  for(cell_w_coor obj: area.Copyed_area ) {
-    		  System.out.println( (obj.x - area.Get_Index_x() )  + " " + ( obj.y - area.Get_Index_y() ) );
+    	//	  System.out.println( (obj.x - area.Get_Index_x() )  + " " + ( obj.y - area.Get_Index_y() ) );
 
     		  if ( obj.x + pre_x > 0 && obj.y + pre_y > 0) {  
     			  g.fillRect( (obj.x + pre_x ) *total+border_width, (obj.y + pre_y) *total+border_width, cell_width, cell_width);
@@ -937,49 +914,45 @@ public class Board extends JPanel {
        	  }
     	  
       }
+      */
       
       /*
        * I/O Section
        */
-      public void pack() {
+      public Queue<cell_w_coor> pack() {
     	  
     	  
     	  //Construct a queue to store all alive cell 
-    	   Q_for_pack = new ArrayDeque<cell_w_coor>();
+    	  ArrayDeque<cell_w_coor>  Q_for_pack = new ArrayDeque<cell_w_coor>();
 
-    	  //Checking
+    	  //Checking, only save those !null cell with coor
     	  for (int z=0 ; z<Max_array_d ; z++) {
-    		  System.out.println(z);
     		  for (int x=0 ; x<Max_array_w ; x++) {
     			  for (int y=0 ; y<Max_array_h ; y++) {
     				  if (cells[z][x][y] != null) {
-    					  System.out.println("No null");
-
-    					  cell_w_coor temp = new cell_w_coor (z,x,y,cells[z][x][y]);
-    					  Q_for_pack.add(temp);
+    			//		  System.out.println("No null");
+    					  Q_for_pack.add( new cell_w_coor (z,x,y,cells[z][x][y]) );
     				  }
     			  }
     		  }
 		}
-    	  System.out.println(Q_for_pack.size() + "cells need to be save");
-  
+    	  //  System.out.println(Q_for_pack.size() + "cells need to be save");
+    	  return Q_for_pack;
     	  
       }      
       public void restore_from_save(Queue<cell_w_coor> Q_for_pack, Vector<Coor> Q_of_cell) {
     	
-    	  this.Q_for_pack = Q_for_pack;
     	  this.Q_of_cell = Q_of_cell;
     	  System.out.println(Q_for_pack.size());
-    	  
+    	  //Resotre all live cell into grid
     	  while (Q_for_pack.size() != 0 ) {
-    		  cell_w_coor temp = Q_for_pack.poll();
     		  
+    		  cell_w_coor temp = Q_for_pack.poll(); 
     		  cells[temp.z][temp.x][temp.y] = temp.cell;
-    		  System.out.println(temp.z + " " + temp.x + " " + temp.y);
+    	//	  System.out.println(temp.z + " " + temp.x + " " + temp.y);
     		  
     	  }
-    		  
-    	  
+    	  //Refresh screen
     	  this.repaint();
     	  
       }

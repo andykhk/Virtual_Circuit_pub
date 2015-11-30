@@ -1,8 +1,11 @@
 package data_Package;
 
-import java.util.Queue;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
 import java.util.Vector;
 
+import menu.Menu;
 import other.Cell;
 import other.Coor;
 import other.cell_w_coor;
@@ -22,6 +25,12 @@ public class Selected_area {
 	public int weight;
 	public int height;
 	
+	public BufferedImage image ;
+	//Interface of image
+	private Graphics buf_g;
+	
+	//Proprity of cache
+	public int cell_width, border_width;
 
 	//Container
 	public Vector<cell_w_coor> Copyed_area;
@@ -38,11 +47,49 @@ public class Selected_area {
 		this.prefix_y = prefix_y;
 		this.weight = weight;
 		this.height = height;
-		
-		 Copyed_area = new Vector<cell_w_coor> ();
+
+		Copyed_area = new Vector<cell_w_coor> ();
+
+	
+
 	}
+
+	public void Snapshot (int cell_w, int border_l, Cell[][][] cells, Menu left) {
+		
+		cell_width = cell_w;
+		border_width = border_l;
+		
+		
+		int total = cell_w+border_l;
+		int total_w = weight*(total) + border_l;
+		int total_h = height*(total) + border_l;
+		
+		
+		//Take a snapshot
+		image = new BufferedImage(total_w, total_h, BufferedImage.TYPE_INT_ARGB);
+		buf_g = image.getGraphics();
+//		System.out.println("A image for " + total_w + "*" + total_h);
+		//Loop through selected area to draw snapshot
+		int index_x = Get_Index_x() , index_y = Get_Index_y();
+
+		//Make change perm	
+		buf_g.setColor(Color.white);
+		for (int pos_x=0 ; pos_x< weight-1 ; pos_x++) {
+			for (int pos_y=0 ; pos_y< height ; pos_y++) {
+
+				
+				//Take reference of all alive cell on copyed area, as a vector
+				if  (cells[d][index_x + pos_x][index_y + pos_y] != null) {
+					
+    				  buf_g.fillRect( pos_x*total+border_l, pos_y*total+border_l, cell_w, cell_w);
+    			  }
+				}	    
+			}
+		
+		
+		}
 	
-	
+
 	
 	//Copy constructor
 	public Selected_area (Selected_area org) {
@@ -74,6 +121,30 @@ public class Selected_area {
 		}
 		
 		return true;
+	}
+
+	public boolean Check_bound_visible (int prefix_x, int prefix_y,int depth, int Amount_of_x, int Amount_of_y ) {
+		 
+
+		if (depth == d) {
+			int left_upper_x = Get_Index_x() - prefix_x;
+			int left_upper_y = Get_Index_y() - prefix_y;
+
+			if(left_upper_x > (0-weight)  && left_upper_x < Amount_of_x  ) {
+				if(left_upper_y >  (0-height)  && left_upper_y < Amount_of_y  ) {
+					return true;  
+				}
+			}
+		}
+   	  return false;
+     }
+     
+	public boolean check_cache_eligible (int cell_width, int border_width ) {
+		if (this.cell_width == cell_width && this.border_width == border_width) {
+			return true;	
+		}
+		return false;
+ 		
 	}
 	
 	public void Update (int x, int y, int d, int prefix_x, int prefix_y, int weight, int height) {
@@ -194,7 +265,7 @@ public class Selected_area {
 //		System.out.println(index_x + "->" + (index_x+weight) );
 //		System.out.println(index_y + "->" + (index_y+height) );
 		
-		 for (int pos_x= 0 ; pos_x < weight ; pos_x++ ) {
+		 for (int pos_x= 0 ; pos_x < weight-1 ; pos_x++ ) {
 			  for (int pos_y=0 ; pos_y < height ; pos_y++) {
 				  if (cells[d][index_x + pos_x][index_y + pos_y] != null) {
 //					  System.out.println("Not null");

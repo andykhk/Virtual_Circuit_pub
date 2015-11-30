@@ -7,6 +7,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Queue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -23,6 +24,7 @@ import container.Main_Frame;
 import other.Data;
 import other.IO_Handler;
 import other.Preference;
+import other.cell_w_coor;
 
 /*
  * Responsible for the first row of panel
@@ -242,24 +244,11 @@ public class Button_Pan extends JPanel{
 				
 				Preference colour_pre = main_f.left.sec_pan.pack_preference();
 				
-				Grid_panel.pack();
-				io.Save_as(Grid_panel.Q_for_pack,Grid_panel.Q_of_cell,colour_pre);
+				Queue<cell_w_coor> Q_for_pack =  Grid_panel.pack();
+				io.Save_as(Q_for_pack,Grid_panel.Q_of_cell,colour_pre);
 			
-			} else if (e.getSource() == save_as) {
-				System.out.println("Save_as");
-				Grid_panel.pack();
-				if (Grid_panel.Q_for_pack == null)
-					System.out.println("Q_for_pack null");
-				if (Grid_panel.Q_of_cell == null)
-					System.out.println("Q_of_cell null");
-				Preference colour_pre = main_f.left.sec_pan.pack_preference();
-				
-				
-				io.Save_as(Grid_panel.Q_for_pack,Grid_panel.Q_of_cell,colour_pre);
-				
-			
-
-			}
+			} 
+			 
 		}
 
 	}
