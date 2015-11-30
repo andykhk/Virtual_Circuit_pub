@@ -70,6 +70,7 @@ public class Board extends JPanel {
 	//Iteration
 	public Vector<Coor> Q_of_cell;
 	public Vector<Coor> Next_Q ;
+	//I/O Load & Save feature
 	public Queue<cell_w_coor> Q_for_pack;
 	public boolean running;
 
@@ -182,7 +183,7 @@ public class Board extends JPanel {
        * Complex computation
        */
       public void NextIteration () {
-    	  
+    	  System.out.println("Size of Q: "+Q_of_cell.size() );
   //  	  System.out.println("Next iteration.");
     	  
     	  Next_Q = new Vector<Coor>();
@@ -280,7 +281,7 @@ public class Board extends JPanel {
     	   */
     	  
    // 	  System.out.println("Next state size: " +  Next_state.size() );
-   // 	  System.out.println("Next Q size: " +  Next_Q.size() );
+    	  System.out.println("Next Q size: " +  Next_Q.size() );
     	  
     	  
     	  int len = Next_Q.size();
@@ -347,7 +348,10 @@ public class Board extends JPanel {
     		  //Save what ever is it on selected area
     		  copyed_area = new Selected_area(select_area);
     		  copyed_area.Take_copy(cells);
-    		  //Implement to store the whole cell object later
+    		  /*Reset selected_area to avoid delete selected_area 
+    		   * accidentially when modifying other pr  on panel
+    		   */
+    		  selected = false;
     	  }
       } 
       public void paste_select () {
@@ -371,15 +375,16 @@ public class Board extends JPanel {
     	  
  
       }
-		    
+		 
       public void delete_select () {
-    	  if (selection_m) {
+    	  if (selection_m && selected) {
     		  System.out.println("Curr D: " + this.Get_Depth());
     		  select_area.Delete(cells);
     		  selected = false;
     		  repaint();
     	  }
       }
+      
       
       //Mouse event handler
       class Mouse_listener extends MouseAdapter  {
@@ -421,7 +426,7 @@ public class Board extends JPanel {
     						  if (!select_offset.Check_bound(cur_x, cur_y)) {
     							  System.out.println("Out of bound - While draging");
     							  //Make change perm	 
-    						//	  select_area.Copy(prefix_x()+select_offset.x, prefix_y()+select_offset.y, Get_Depth() , cells, Q_of_cell,true);
+    							  select_area.Copy(prefix_x()+select_offset.x, prefix_y()+select_offset.y, Get_Depth() , cells, Q_of_cell,true);
     							  //Indicate finished moving
     							  select_offset = null;
     							  select_area = null;
@@ -729,13 +734,15 @@ public class Board extends JPanel {
       public void paintComponent(Graphics g) {
 
     	  if (!running  || force_rend) {
-    		  //System.out.println("   Rend in normal");
+    //		  System.out.println("   Rend in normal");
 
     		  //Normal situation (move around & add/remove cell)
     		  draw_bg_nogrid(g);
     		  draw_dyn_cell(g); 
     		  
     		  if (selection_m) {
+    			  //Mean once simulation started, it need a rand new snapshot()
+    			  buffering = false;
     			  //Draw the border to indicate selected area
     			  if (shape != null)	 {
     					  select_square(g);

@@ -292,19 +292,18 @@ public class Sec_Pan extends JPanel{
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			
-			
-			
+
 			try {
 				
-				
-				
+			
 				if (e.getSource() ==step_delay ) {
-					
+					System.out.println("Delay changed");
 					int delay =  Integer.valueOf(step_delay.getText() );
 					but_pan.iter_timer.setDelay(delay);
 
 					if (Grid_panel.running) {
 						//Run one time first 
+						System.out.println("Restart timer");
 						but_pan.iter_timer.setInitialDelay(0);
 						but_pan.iter_timer.restart();
 					}

@@ -188,6 +188,8 @@ import other.*;
 					right.paste_select();
 					
 				}else if ((e.getKeyCode() == KeyEvent.VK_BACK_SPACE) ) {
+					System.out.println("Pressed Del");
+					
 					right.delete_select();
 				}
 			}

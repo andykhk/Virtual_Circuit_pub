@@ -109,7 +109,7 @@ public class Selected_area {
 				//Take reference of all alive cell on copyed area, as a vector
 				if  (cells[d][index_x + pos_x][index_y + pos_y] != null) {
 					Copyed_area.addElement(
-							new cell_w_coor ( d, index_x+pos_x, index_y+pos_y, cells[d][index_x+pos_x][index_y+pos_y] ) );
+							new cell_w_coor ( d, index_x+pos_x, index_y+pos_y, new Cell(cells[d][index_x+pos_x][index_y+pos_y] ) ) );
 					
 				}	    
 			}
@@ -129,19 +129,19 @@ public class Selected_area {
 		//pasted accordingly
 		for (cell_w_coor e : Copyed_area ) {
 			//Link
-			cells[copyed_d][e.x+diff_x][e.y+diff_y] = e.cell;
+			cells[copyed_d][e.x+diff_x][e.y+diff_y] = new Cell(e.cell);
 			//Add queue
 			if ( cells[copyed_d][e.x+diff_x][e.y+diff_y].Any_state() ) {
 				Q_of_cell.add(new Coor(copyed_d, e.x+diff_x, e.y+diff_y) );
 			}  
 		}
-		System.out.println("Number of cells: " + Copyed_area.size() );
+	//	System.out.println("Number of cells: " + Copyed_area.size() );
 		
 		
 	}
 	
 	
-	/*
+	
 	public void Copy (int copyed_x, int copyed_y, int copyed_d, Cell[][][] cells, Vector<Coor> Q_of_cell, boolean delete) {
 	
 		Vector<cell_w_coor> Copyed_area = new Vector<cell_w_coor> ();
@@ -182,27 +182,29 @@ public class Selected_area {
 		  Copyed_area.clear();
 		
 	}
-*/	
+	
 
 	//Swipe cells in sleected subset
 	public void Delete (Cell[][][] cells) {
+		System.out.println("Delete method");
 		int index_x = Get_Index_x();
 		int index_y = Get_Index_y();
 		
-		System.out.println("Del...Depth: " + d);
-		System.out.println(index_x + "->" + (index_x+weight) );
-		System.out.println(index_y + "->" + (index_y+height) );
+//		System.out.println("Del...Depth: " + d);
+//		System.out.println(index_x + "->" + (index_x+weight) );
+//		System.out.println(index_y + "->" + (index_y+height) );
 		
 		 for (int pos_x= 0 ; pos_x < weight ; pos_x++ ) {
 			  for (int pos_y=0 ; pos_y < height ; pos_y++) {
 				  if (cells[d][index_x + pos_x][index_y + pos_y] != null) {
-					  System.out.println("Not null");
+//					  System.out.println("Not null");
 					  cells[d][index_x + pos_x][index_y + pos_y] = null;	
 				  }
 			  }	
 		  }
 	
 	}
+	
 	
 	//Getter
 	public int Get_base_w (int pre_x) {
