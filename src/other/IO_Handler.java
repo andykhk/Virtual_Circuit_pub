@@ -54,7 +54,9 @@ public class IO_Handler extends JPanel{
 				streamIn = new FileInputStream(cur_path);
 				
 				ObjectInputStream objectinputstream = new ObjectInputStream(streamIn);
+				@SuppressWarnings("unchecked")
 				Queue<cell_w_coor> Q_for_pack =  (Queue<cell_w_coor>) objectinputstream.readObject();	
+				@SuppressWarnings("unchecked")
 				Vector<Coor> Q_of_cell =  (Vector<Coor>) objectinputstream.readObject();	
 				Preference preference = (Preference)objectinputstream.readObject();
 				objectinputstream.close();
